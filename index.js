@@ -17,8 +17,20 @@ initializeApp({
   projectId: 'ridexpress-81cc1',
 });
 
+// JWT
+const jwt = require('jsonwebtoken');
+const secretKey = process.env.SECRET_KEY;
+
 // Middlewars
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    methods: 'GET,POST,PUT,DELETE',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true,
+  })
+);
+
 app.use(express.json()); // Request body parser middleware
 
 // App is listenning on port: 5000
@@ -36,16 +48,19 @@ app.post('/users', async (req, res) => {
   const { user } = req.body;
   const token = req.headers.authorization;
 
+  console.log('Recieved request!');
+
   getAuth()
     .verifyIdToken(token)
     .then(async (decodedToken) => {
       if (decodedToken.email === user.email) {
         const existingUser = await userCollectiion.findOne({ email: user.email });
+        const jwToken = jwt.sign(user, secretKey);
         if (!existingUser) {
           userCollectiion.insertOne(user);
-          res.send('New user added!');
+          res.cookie('token', jwToken, { httpOnly: true, secure: true }).send('New user added!');
         } else {
-          res.send('User logged in!');
+          res.cookie('token', jwToken, { httpOnly: true, secure: true }).send('User logged in!');
         }
       }
     });
