@@ -1,11 +1,12 @@
 const express = require('express');
-const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const app = express();
 const port = 5000;
+
+// dotenv
 require('dotenv').config();
 
 // MongoDB database
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const dbPassword = process.env.PASSWORD;
 const uri = `mongodb+srv://yfaka001_dev:${dbPassword}@cluster0.tiftb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -22,6 +23,8 @@ const jwt = require('jsonwebtoken');
 const secretKey = process.env.SECRET_KEY;
 
 // Middlewars
+// Middleware: cors
+const cors = require('cors');
 app.use(
   cors({
     origin: 'http://localhost:5173',
@@ -30,8 +33,34 @@ app.use(
     credentials: true,
   })
 );
-
 app.use(express.json()); // Request body parser middleware
+// Middleware: cookie-parser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+// Custom middlewares
+const verifyToken = (req, res, next) => {
+  const jwToken = req?.cookies?.token;
+  if (!jwToken) {
+    res.status(401).send({ message: 'Unauthorized access!' });
+    return;
+  }
+  jwt.verify(jwToken, secretKey, (err, decoded) => {
+    if (err) {
+      res.status(401).send({ message: 'Unauthorized access!' });
+      return;
+    } else {
+      req.user = decoded;
+      next();
+    }
+  });
+};
+
+// Testing token verification
+app.get('/test', verifyToken, (req, res) => {
+  console.log(req.user);
+  res.send('Welcome! You are a verified user!');
+});
 
 // App is listenning on port: 5000
 app.listen(5000, () => {
@@ -47,8 +76,6 @@ app.get('/', (req, res) => {
 app.post('/users', async (req, res) => {
   const { user } = req.body;
   const token = req.headers.authorization;
-
-  console.log('Recieved request!');
 
   getAuth()
     .verifyIdToken(token)
@@ -68,9 +95,8 @@ app.post('/users', async (req, res) => {
 
 // Log out from server
 app.get('/logout', (req, res) => {
-  console.log('Logout request recieved!');
-  res.clearCookie('token');
-})
+  res.clearCookie('token', { httpOnly: true, secure: true }).send({message: 'Cookie cleared!'});
+});
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
