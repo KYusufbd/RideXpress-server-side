@@ -66,6 +66,12 @@ app.post('/users', async (req, res) => {
     });
 });
 
+// Log out from server
+app.get('/logout', (req, res) => {
+  console.log('Logout request recieved!');
+  res.clearCookie('token');
+})
+
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
