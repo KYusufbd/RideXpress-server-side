@@ -6,7 +6,7 @@ const port = 5000;
 require('dotenv').config();
 
 // MongoDB database
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const dbPassword = process.env.PASSWORD;
 const uri = `mongodb+srv://yfaka001_dev:${dbPassword}@cluster0.tiftb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -103,14 +103,25 @@ const carCollectiion = database.collection('cars');
 
 // Get available cars
 app.get('/cars', async (req, res) => {
-  const cars = await carCollectiion.find().toArray();
+  await client.connect();
+  const cars = await carCollectiion.find({}, { projection: { model: 1, availability: 1, features: 1, imageUrl: 1, location: 1 } }).toArray();
   res.send(cars);
+});
+
+// Get car details
+app.get('/cars/:id', async (req, res) => {
+  const carId = req.params.id;
+  await client.connect();
+  const car = await carCollectiion.findOne({ _id: ObjectId.createFromHexString(carId) });
+  res.send(car);
 });
 
 // Add user
 app.post('/users', async (req, res) => {
   const { user } = req.body;
   const token = req.headers.authorization;
+
+  await client.connect();
 
   getAuth()
     .verifyIdToken(token)
