@@ -56,6 +56,12 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+// // Testing purpose:
+// Testing server
+app.get('/', (req, res) => {
+  res.send('Welcome to RideXpress app!');
+});
+
 // Testing token verification
 app.get('/test', verifyToken, (req, res) => {
   console.log(req.user);
@@ -67,9 +73,38 @@ app.listen(5000, () => {
   console.log(`App is listening on port: ${port}`);
 });
 
-// Testing purpose:
-app.get('/', (req, res) => {
-  res.send('Welcome to RideXpress app!');
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
+
+// Testing MongoDB connection:
+async function run() {
+  try {
+    // Connect the client to the server	(optional starting in v4.7)
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db('admin').command({ ping: 1 });
+    console.log('Pinged your deployment. You successfully connected to MongoDB!');
+  } catch {
+    console.dir;
+  }
+}
+run();
+
+// Mongodb cursors
+const database = client.db('ridexpress');
+const userCollectiion = database.collection('users');
+const carCollectiion = database.collection('cars');
+
+// Get available cars
+app.get('/cars', async (req, res) => {
+  const cars = await carCollectiion.find().toArray();
+  res.send(cars);
 });
 
 // Add user
@@ -95,31 +130,5 @@ app.post('/users', async (req, res) => {
 
 // Log out from server
 app.get('/logout', (req, res) => {
-  res.clearCookie('token', { httpOnly: true, secure: true }).send({message: 'Cookie cleared!'});
+  res.clearCookie('token', { httpOnly: true, secure: true }).send({ message: 'Cookie cleared!' });
 });
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-
-const database = client.db('ridexpress');
-const userCollectiion = database.collection('users');
-const carCollectiion = database.collection('cars');
-
-async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db('admin').command({ ping: 1 });
-    console.log('Pinged your deployment. You successfully connected to MongoDB!');
-  } catch {
-    console.dir;
-  }
-}
-run();
