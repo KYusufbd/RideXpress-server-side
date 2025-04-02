@@ -39,6 +39,7 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 // Custom middlewares
+// Middleware: verifyToken
 const verifyToken = (req, res, next) => {
   const jwToken = req?.cookies?.token;
   if (!jwToken) {
@@ -106,9 +107,27 @@ app.get('/cars', async (req, res) => {
   await client.connect();
   const { search, sort_by, sort_order } = req.query;
   const sort = sort_by ? { [sort_by]: sort_order === 'asc' ? 1 : -1 } : {};
-  const query = search ? { $or: [{model: { $regex: search, $options: 'i' }}, {location: {$regex: search, $options: 'i'}}] } : {};
-  const cars = await carCollectiion.find(query, { projection: { model: 1, availability: 1, imageUrl: 1, location: 1, dailyRentalPrice: 1 } }).sort(sort).toArray();
+  const query = search ? { $or: [{ model: { $regex: search, $options: 'i' } }, { location: { $regex: search, $options: 'i' } }] } : {};
+  const cars = await carCollectiion
+    .find(query, { projection: { model: 1, availability: 1, imageUrl: 1, location: 1, dailyRentalPrice: 1 } })
+    .sort(sort)
+    .toArray();
   res.send(cars);
+});
+
+// Get cars of logged in user
+app.get('/my-cars', verifyToken, async (req, res) => {
+  try {
+    const email = req.user.email;
+    await client.connect();
+    const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
+    const userId = _id.toString();
+    const cars = await carCollectiion.find({ ownerId: userId }, { projection: { model: 1, availability: 1, imageUrl: 1, location: 1, dailyRentalPrice: 1, dateAdded: 1, bookingCount: 1 } }).toArray();
+    res.send(cars);
+  } catch (error) {
+    console.error('Error fetching cars:', error);
+    res.status(500).send({ message: 'Internal server error' });
+  }
 });
 
 // Get car details
