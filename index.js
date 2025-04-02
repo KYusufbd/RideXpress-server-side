@@ -104,9 +104,10 @@ const carCollectiion = database.collection('cars');
 // Get available cars
 app.get('/cars', async (req, res) => {
   await client.connect();
-  const { search } = req.query;
+  const { search, sort_by, sort_order } = req.query;
+  const sort = sort_by ? { [sort_by]: sort_order === 'asc' ? 1 : -1 } : {};
   const query = search ? { $or: [{model: { $regex: search, $options: 'i' }}, {location: {$regex: search, $options: 'i'}}] } : {};
-  const cars = await carCollectiion.find(query, { projection: { model: 1, availability: 1, features: 1, imageUrl: 1, location: 1 } }).toArray();
+  const cars = await carCollectiion.find(query, { projection: { model: 1, availability: 1, features: 1, imageUrl: 1, location: 1 } }).sort(sort).toArray();
   res.send(cars);
 });
 
