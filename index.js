@@ -155,6 +155,21 @@ app.post('/cars', verifyToken, async (req, res) => {
   }
 });
 
+// Delete car
+app.delete('/cars/:id', verifyToken, async (req, res) => {
+  const carId = req.params.id;
+  const { email } = req.user;
+  await client.connect();
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
+  const userId = _id.toString();
+  const result = await carCollectiion.deleteOne({ _id: ObjectId.createFromHexString(carId), ownerId: userId });
+  if (result.deletedCount === 1) {
+    res.status(200).send({ message: 'Car deleted successfully!' });
+  } else {
+    res.status(404).send({ message: 'Car not found!' });
+  }
+});
+
 // Add user
 app.post('/users', async (req, res) => {
   const { user } = req.body;
