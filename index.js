@@ -138,6 +138,23 @@ app.get('/cars/:id', async (req, res) => {
   res.send(car);
 });
 
+// Add car
+app.post('/cars', verifyToken, async (req, res) => {
+  const { car } = req.body;
+  const { email } = req.user;
+
+  // Connect to the database
+  await client.connect();
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
+  car.ownerId = _id.toString();
+  const result = await carCollectiion.insertOne(car);
+  if (result.acknowledged) {
+    res.status(200).send({ message: 'Car added successfully!' });
+  } else {
+    res.status(500).send({ message: 'Failed to add car!' });
+  }
+});
+
 // Add user
 app.post('/users', async (req, res) => {
   const { user } = req.body;
