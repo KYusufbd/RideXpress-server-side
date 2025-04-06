@@ -155,6 +155,23 @@ app.post('/cars', verifyToken, async (req, res) => {
   }
 });
 
+// Update car
+app.put('/cars/:id', verifyToken, async (req, res) => {
+  const carId = req.params.id;
+  const { car } = req.body;
+  const { email } = req.user;
+  const query = { _id: ObjectId.createFromHexString(carId) };
+  const update = { $set: car };
+  const Options = { upsert: true };
+  await client.connect();
+  const result = await carCollectiion.updateOne(query, update, Options);
+  if (result.matchedCount > 0) {
+    res.status(200).send({ message: 'Car updated successfully!' });
+  } else {
+    res.status(404).send({ message: 'Car not found!' });
+  }
+});
+
 // Delete car
 app.delete('/cars/:id', verifyToken, async (req, res) => {
   const carId = req.params.id;
