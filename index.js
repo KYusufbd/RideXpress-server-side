@@ -134,9 +134,11 @@ app.get('/my-cars', verifyToken, async (req, res) => {
 // Get car details
 app.get('/cars/:id', async (req, res) => {
   const carId = req.params.id;
+  const today = new Date();
+  today.setTime(0);
   await client.connect();
   const car = await carCollectiion.findOne({ _id: ObjectId.createFromHexString(carId) });
-  car.bookings = await bookingCollectiion.find({ carId: carId, endDate: {$gt: new Date().toISOString()}}, {projection: {startDate: 1, endDate: 1, _id: 0}}).toArray();
+  car.bookings = await bookingCollectiion.find({ carId: carId, endDate: {$gte: today.toISOString()}}, {projection: {startDate: 1, endDate: 1, _id: 0}}).toArray();
   res.send(car);
 });
 
