@@ -101,6 +101,7 @@ run();
 const database = client.db('ridexpress');
 const userCollectiion = database.collection('users');
 const carCollectiion = database.collection('cars');
+const bookingCollectiion = database.collection('bookings');
 
 // Get available cars
 app.get('/cars', async (req, res) => {
@@ -184,6 +185,21 @@ app.delete('/cars/:id', verifyToken, async (req, res) => {
     res.status(200).send({ message: 'Car deleted successfully!' });
   } else {
     res.status(404).send({ message: 'Car not found!' });
+  }
+});
+
+// Book car
+app.post('/bookings', verifyToken, async (req, res) => {
+  const { booking } = req.body;
+  const { email } = req.user;
+  await client.connect();
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
+  booking.userId = _id.toString();
+  const result = await bookingCollectiion.insertOne(booking);
+  if (result.acknowledged) {
+    res.status(200).send({ message: 'Booking successful!' });
+  } else {
+    res.status(500).send({ message: 'Failed to book car!' });
   }
 });
 
