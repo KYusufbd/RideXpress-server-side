@@ -252,6 +252,8 @@ app.post("/bookings", verifyToken, async (req, res) => {
     { projection: { _id: 1 } },
   );
   booking.userId = _id.toString();
+  // Booking status should be set to confirmed after confirmation of payment. Now it is set to confirmed by default.
+  booking.status = "confirmed";
   const result = await bookingCollectiion.insertOne(booking);
   if (result.acknowledged) {
     carCollectiion.updateOne(
