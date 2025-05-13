@@ -208,7 +208,6 @@ app.post("/cars", verifyToken, async (req, res) => {
 app.put("/cars/:id", verifyToken, async (req, res) => {
   const carId = req.params.id;
   const { car } = req.body;
-  const { email } = req.user;
   const query = { _id: ObjectId.createFromHexString(carId) };
   const update = { $set: car };
   const Options = { upsert: true };
@@ -283,8 +282,9 @@ app.get("/my-bookings", verifyToken, async (req, res) => {
           carId: 1,
           startDate: 1,
           endDate: 1,
+          totalCost: 1,
           status: 1,
-          _id: 0,
+          createdAt: 1,
         },
       },
     )
