@@ -266,6 +266,61 @@ app.post("/bookings", verifyToken, async (req, res) => {
   }
 });
 
+// Get bookings of logged in user
+app.get("/my-bookings", verifyToken, async (req, res) => {
+  const { email } = req.user;
+  await client.connect();
+  const { _id } = await userCollectiion.findOne(
+    { email },
+    { projection: { _id: 1 } },
+  );
+  const userId = _id.toString();
+  const bookings = await bookingCollectiion
+    .find(
+      { userId: userId },
+      {
+        projection: {
+          carId: 1,
+          startDate: 1,
+          endDate: 1,
+          status: 1,
+          _id: 0,
+        },
+      },
+    )
+    .toArray();
+  const carIds = bookings.map((booking) => booking.carId);
+  const cars = await carCollectiion
+    .find(
+      { _id: { $in: carIds.map((id) => ObjectId.createFromHexString(id)) } },
+      {
+        projection: {
+          model: 1,
+          availability: 1,
+          imageUrl: 1,
+          location: 1,
+          dailyRentalPrice: 1,
+        },
+      },
+    )
+    .toArray();
+  const bookingsWithCarDetails = bookings.map((booking) => {
+    const car = cars.find(
+      (car) => car._id.toString() === booking.carId.toString(),
+    );
+    return {
+      ...booking,
+      car: {
+        model: car.model,
+        imageUrl: car.imageUrl,
+      },
+    };
+  }
+  );
+  res.send(bookingsWithCarDetails);
+}
+);
+
 // Add user
 app.post("/users", async (req, res) => {
   const { user } = req.body;
