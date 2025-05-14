@@ -167,7 +167,7 @@ app.get('/cars/:id', async (req, res) => {
   const car = await carCollectiion.findOne({
     _id: ObjectId.createFromHexString(carId),
   });
-  car.bookings = await bookingCollectiion.find({ carId: carId, endDate: { $gte: today.toISOString() } }, { projection: { startDate: 1, endDate: 1, _id: 0 } }).toArray();
+  car.bookings = await bookingCollectiion.find({ carId: carId, status: {$not: {$eq: 'cancelled'}}, endDate: { $gte: today.toISOString() } }, { projection: { startDate: 1, endDate: 1, _id: 0 } }).toArray();
   res.send(car);
 });
 
