@@ -291,6 +291,27 @@ app.get('/my-bookings', verifyToken, async (req, res) => {
   res.send(bookingsWithCarDetails);
 });
 
+// Cancel booking
+app.delete('/bookings/:id', verifyToken, async (req, res) => {
+  const bookingId = req.params.id;
+  const { email } = req.user;
+  await client.connect();
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
+  const userId = _id.toString();
+  const result = await bookingCollectiion.updateOne(
+    {
+      _id: ObjectId.createFromHexString(bookingId),
+      userId: userId,
+    },
+    { $set: { status: 'cancelled' } }
+  );
+  if (result.modifiedCount > 0) {
+    res.status(200).send({ message: 'Booking cancelled successfully!' });
+  } else {
+    res.status(404).send({ message: 'Booking not found!' });
+  }
+});
+
 // Add user
 app.post('/users', async (req, res) => {
   const { user } = req.body;
