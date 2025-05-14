@@ -1,41 +1,41 @@
-const express = require("express");
+const express = require('express');
 const app = express();
 const port = 5000;
 
 // dotenv
-require("dotenv").config();
+require('dotenv').config();
 
 // MongoDB database
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const dbPassword = process.env.PASSWORD;
 const uri = `mongodb+srv://yfaka001_dev:${dbPassword}@cluster0.tiftb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Firebase admin
-const { initializeApp, applicationDefault } = require("firebase-admin/app");
-const { getAuth } = require("firebase-admin/auth");
+const { initializeApp, applicationDefault } = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
 initializeApp({
   credential: applicationDefault(),
-  projectId: "ridexpress-81cc1",
+  projectId: 'ridexpress-81cc1',
 });
 
 // JWT
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 const secretKey = process.env.SECRET_KEY;
 
 // Middlewars
 // Middleware: cors
-const cors = require("cors");
+const cors = require('cors');
 app.use(
   cors({
-    origin: "http://localhost:5173",
-    methods: "GET,POST,PUT,DELETE",
-    allowedHeaders: "Content-Type,Authorization",
+    origin: 'http://localhost:5173',
+    methods: 'GET,POST,PUT,DELETE',
+    allowedHeaders: 'Content-Type,Authorization',
     credentials: true,
-  }),
+  })
 );
 app.use(express.json()); // Request body parser middleware
 // Middleware: cookie-parser
-const cookieParser = require("cookie-parser");
+const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 // Custom middlewares
@@ -43,12 +43,12 @@ app.use(cookieParser());
 const verifyToken = (req, res, next) => {
   const jwToken = req?.cookies?.token;
   if (!jwToken) {
-    res.status(401).send({ message: "Unauthorized access!" });
+    res.status(401).send({ message: 'Unauthorized access!' });
     return;
   }
   jwt.verify(jwToken, secretKey, (err, decoded) => {
     if (err) {
-      res.status(401).send({ message: "Unauthorized access!" });
+      res.status(401).send({ message: 'Unauthorized access!' });
       return;
     } else {
       req.user = decoded;
@@ -59,14 +59,14 @@ const verifyToken = (req, res, next) => {
 
 // // Testing purpose:
 // Testing server
-app.get("/", (req, res) => {
-  res.send("Welcome to RideXpress app!");
+app.get('/', (req, res) => {
+  res.send('Welcome to RideXpress app!');
 });
 
 // Testing token verification
-app.get("/test", verifyToken, (req, res) => {
+app.get('/test', verifyToken, (req, res) => {
   console.log(req.user);
-  res.send("Welcome! You are a verified user!");
+  res.send('Welcome! You are a verified user!');
 });
 
 // App is listenning on port: 5000
@@ -89,10 +89,8 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!",
-    );
+    await client.db('admin').command({ ping: 1 });
+    console.log('Pinged your deployment. You successfully connected to MongoDB!');
   } catch {
     console.dir;
   }
@@ -100,22 +98,19 @@ async function run() {
 run();
 
 // Mongodb cursors
-const database = client.db("ridexpress");
-const userCollectiion = database.collection("users");
-const carCollectiion = database.collection("cars");
-const bookingCollectiion = database.collection("bookings");
+const database = client.db('ridexpress');
+const userCollectiion = database.collection('users');
+const carCollectiion = database.collection('cars');
+const bookingCollectiion = database.collection('bookings');
 
 // Get available cars
-app.get("/cars", async (req, res) => {
+app.get('/cars', async (req, res) => {
   await client.connect();
   const { search, sort_by, sort_order } = req.query;
-  const sort = sort_by ? { [sort_by]: sort_order === "asc" ? 1 : -1 } : {};
+  const sort = sort_by ? { [sort_by]: sort_order === 'asc' ? 1 : -1 } : {};
   const query = search
     ? {
-        $or: [
-          { model: { $regex: search, $options: "i" } },
-          { location: { $regex: search, $options: "i" } },
-        ],
+        $or: [{ model: { $regex: search, $options: 'i' } }, { location: { $regex: search, $options: 'i' } }],
       }
     : {};
   const cars = await carCollectiion
@@ -134,14 +129,11 @@ app.get("/cars", async (req, res) => {
 });
 
 // Get cars of logged in user
-app.get("/my-cars", verifyToken, async (req, res) => {
+app.get('/my-cars', verifyToken, async (req, res) => {
   try {
     const email = req.user.email;
     await client.connect();
-    const { _id } = await userCollectiion.findOne(
-      { email },
-      { projection: { _id: 1 } },
-    );
+    const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
     const userId = _id.toString();
     const cars = await carCollectiion
       .find(
@@ -156,18 +148,18 @@ app.get("/my-cars", verifyToken, async (req, res) => {
             dateAdded: 1,
             bookingCount: 1,
           },
-        },
+        }
       )
       .toArray();
     res.send(cars);
   } catch (error) {
-    console.error("Error fetching cars:", error);
-    res.status(500).send({ message: "Internal server error" });
+    console.error('Error fetching cars:', error);
+    res.status(500).send({ message: 'Internal server error' });
   }
 });
 
 // Get car details
-app.get("/cars/:id", async (req, res) => {
+app.get('/cars/:id', async (req, res) => {
   const carId = req.params.id;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -175,37 +167,29 @@ app.get("/cars/:id", async (req, res) => {
   const car = await carCollectiion.findOne({
     _id: ObjectId.createFromHexString(carId),
   });
-  car.bookings = await bookingCollectiion
-    .find(
-      { carId: carId, endDate: { $gte: today.toISOString() } },
-      { projection: { startDate: 1, endDate: 1, _id: 0 } },
-    )
-    .toArray();
+  car.bookings = await bookingCollectiion.find({ carId: carId, endDate: { $gte: today.toISOString() } }, { projection: { startDate: 1, endDate: 1, _id: 0 } }).toArray();
   res.send(car);
 });
 
 // Add car
-app.post("/cars", verifyToken, async (req, res) => {
+app.post('/cars', verifyToken, async (req, res) => {
   const { car } = req.body;
   const { email } = req.user;
 
   // Connect to the database
   await client.connect();
-  const { _id } = await userCollectiion.findOne(
-    { email },
-    { projection: { _id: 1 } },
-  );
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
   car.ownerId = _id.toString();
   const result = await carCollectiion.insertOne(car);
   if (result.acknowledged) {
-    res.status(200).send({ message: "Car added successfully!" });
+    res.status(200).send({ message: 'Car added successfully!' });
   } else {
-    res.status(500).send({ message: "Failed to add car!" });
+    res.status(500).send({ message: 'Failed to add car!' });
   }
 });
 
 // Update car
-app.put("/cars/:id", verifyToken, async (req, res) => {
+app.put('/cars/:id', verifyToken, async (req, res) => {
   const carId = req.params.id;
   const { car } = req.body;
   const query = { _id: ObjectId.createFromHexString(carId) };
@@ -214,69 +198,59 @@ app.put("/cars/:id", verifyToken, async (req, res) => {
   await client.connect();
   const result = await carCollectiion.updateOne(query, update, Options);
   if (result.matchedCount > 0) {
-    res.status(200).send({ message: "Car updated successfully!" });
+    res.status(200).send({ message: 'Car updated successfully!' });
   } else {
-    res.status(404).send({ message: "Car not found!" });
+    res.status(404).send({ message: 'Car not found!' });
   }
 });
 
 // Delete car
-app.delete("/cars/:id", verifyToken, async (req, res) => {
+app.delete('/cars/:id', verifyToken, async (req, res) => {
   const carId = req.params.id;
   const { email } = req.user;
   await client.connect();
-  const { _id } = await userCollectiion.findOne(
-    { email },
-    { projection: { _id: 1 } },
-  );
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
   const userId = _id.toString();
   const result = await carCollectiion.deleteOne({
     _id: ObjectId.createFromHexString(carId),
     ownerId: userId,
   });
   if (result.deletedCount === 1) {
-    res.status(200).send({ message: "Car deleted successfully!" });
+    res.status(200).send({ message: 'Car deleted successfully!' });
   } else {
-    res.status(404).send({ message: "Car not found!" });
+    res.status(404).send({ message: 'Car not found!' });
   }
 });
 
 // Book car
-app.post("/bookings", verifyToken, async (req, res) => {
+app.post('/bookings', verifyToken, async (req, res) => {
   const { booking } = req.body;
   const { email } = req.user;
   await client.connect();
-  const { _id } = await userCollectiion.findOne(
-    { email },
-    { projection: { _id: 1 } },
-  );
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
   booking.userId = _id.toString();
   // Booking status should be set to confirmed after confirmation of payment. Now it is set to confirmed by default.
-  booking.status = "confirmed";
+  booking.status = 'confirmed';
   const result = await bookingCollectiion.insertOne(booking);
   if (result.acknowledged) {
-    carCollectiion.updateOne(
-      { _id: ObjectId.createFromHexString(booking.carId) },
-      { $inc: { bookingCount: 1 } },
-    );
-    res.status(200).send({ message: "Booking successful!" });
+    carCollectiion.updateOne({ _id: ObjectId.createFromHexString(booking.carId) }, { $inc: { bookingCount: 1 } });
+    res.status(200).send({ message: 'Booking successful!' });
   } else {
-    res.status(500).send({ message: "Failed to book car!" });
+    res.status(500).send({ message: 'Failed to book car!' });
   }
 });
 
 // Get bookings of logged in user
-app.get("/my-bookings", verifyToken, async (req, res) => {
+app.get('/my-bookings', verifyToken, async (req, res) => {
   const { email } = req.user;
   await client.connect();
-  const { _id } = await userCollectiion.findOne(
-    { email },
-    { projection: { _id: 1 } },
-  );
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
   const userId = _id.toString();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const bookings = await bookingCollectiion
     .find(
-      { userId: userId },
+      { userId: userId, endDate: { $gte: today.toISOString() } },
       {
         projection: {
           carId: 1,
@@ -286,7 +260,7 @@ app.get("/my-bookings", verifyToken, async (req, res) => {
           status: 1,
           createdAt: 1,
         },
-      },
+      }
     )
     .toArray();
   const carIds = bookings.map((booking) => booking.carId);
@@ -301,13 +275,11 @@ app.get("/my-bookings", verifyToken, async (req, res) => {
           location: 1,
           dailyRentalPrice: 1,
         },
-      },
+      }
     )
     .toArray();
   const bookingsWithCarDetails = bookings.map((booking) => {
-    const car = cars.find(
-      (car) => car._id.toString() === booking.carId.toString(),
-    );
+    const car = cars.find((car) => car._id.toString() === booking.carId.toString());
     return {
       ...booking,
       car: {
@@ -315,14 +287,12 @@ app.get("/my-bookings", verifyToken, async (req, res) => {
         imageUrl: car.imageUrl,
       },
     };
-  }
-  );
+  });
   res.send(bookingsWithCarDetails);
-}
-);
+});
 
 // Add user
-app.post("/users", async (req, res) => {
+app.post('/users', async (req, res) => {
   const { user } = req.body;
   const token = req.headers.authorization;
 
@@ -338,21 +308,15 @@ app.post("/users", async (req, res) => {
         const jwToken = jwt.sign(user, secretKey);
         if (!existingUser) {
           userCollectiion.insertOne(user);
-          res
-            .cookie("token", jwToken, { httpOnly: true, secure: true })
-            .send("New user added!");
+          res.cookie('token', jwToken, { httpOnly: true, secure: true }).send('New user added!');
         } else {
-          res
-            .cookie("token", jwToken, { httpOnly: true, secure: true })
-            .send("User logged in!");
+          res.cookie('token', jwToken, { httpOnly: true, secure: true }).send('User logged in!');
         }
       }
     });
 });
 
 // Log out from server
-app.get("/logout", (req, res) => {
-  res
-    .clearCookie("token", { httpOnly: true, secure: true })
-    .send({ message: "Cookie cleared!" });
+app.get('/logout', (req, res) => {
+  res.clearCookie('token', { httpOnly: true, secure: true }).send({ message: 'Cookie cleared!' });
 });
