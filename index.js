@@ -161,14 +161,21 @@ app.get('/my-cars', verifyToken, async (req, res) => {
 // Get car details
 app.get('/cars/:id', async (req, res) => {
   const carId = req.params.id;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
   await client.connect();
   const car = await carCollectiion.findOne({
     _id: ObjectId.createFromHexString(carId),
   });
-  car.bookings = await bookingCollectiion.find({ carId: carId, status: {$not: {$eq: 'cancelled'}}, endDate: { $gte: today.toISOString() } }, { projection: { startDate: 1, endDate: 1, _id: 0 } }).toArray();
   res.send(car);
+});
+
+// Get all bookings of a car
+app.get('/cars/:id/bookings', async (req, res) => {
+  const carId = req.params.id;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  await client.connect();
+  const bookings = await bookingCollectiion.find({ carId: carId, status: {$not: {$eq: 'cancelled'}}, endDate: { $gte: today.toISOString() } }, { projection: { startDate: 1, endDate: 1, _id: 0 } }).toArray();
+  res.send(bookings);
 });
 
 // Add car
