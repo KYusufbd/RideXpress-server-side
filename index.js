@@ -265,7 +265,7 @@ app.get('/my-bookings', verifyToken, async (req, res) => {
           carId: 1,
           startDate: 1,
           endDate: 1,
-          totalCost: 1,
+          dailyRentalPrice: 1,
           status: 1,
           createdAt: 1,
         },
