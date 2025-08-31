@@ -28,7 +28,7 @@ const cors = require('cors');
 app.use(
   cors({
     origin: 'http://localhost:5173',
-    methods: 'GET,POST,PUT,DELETE',
+    methods: 'GET,POST,PUT,DELETE,PATCH',
     allowedHeaders: 'Content-Type,Authorization',
     credentials: true,
   })
@@ -174,7 +174,9 @@ app.get('/cars/:id/bookings', async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   await client.connect();
-  const bookings = await bookingCollectiion.find({ carId: carId, status: {$not: {$eq: 'cancelled'}}, endDate: { $gte: today.toISOString() } }, { projection: { startDate: 1, endDate: 1, _id: 0 } }).toArray();
+  const bookings = await bookingCollectiion
+    .find({ carId: carId, status: { $not: { $eq: 'cancelled' } }, endDate: { $gte: today.toISOString() } }, { projection: { startDate: 1, endDate: 1, _id: 0 } })
+    .toArray();
   res.send(bookings);
 });
 
@@ -314,6 +316,30 @@ app.delete('/bookings/:id', verifyToken, async (req, res) => {
   );
   if (result.modifiedCount > 0) {
     res.status(200).send({ message: 'Booking cancelled successfully!' });
+  } else {
+    res.status(404).send({ message: 'Booking not found!' });
+  }
+});
+
+// Update booking Date
+app.patch('/bookings/:id', verifyToken, async (req, res) => {
+  const bookingId = req.params.id;
+  const { startDate, endDate, totalCost } = req.body;
+  const { email } = req.user;
+  await client.connect();
+
+  const { _id } = await userCollectiion.findOne({ email }, { projection: { _id: 1 } });
+  const userId = _id.toString();
+  const result = await bookingCollectiion.updateOne(
+    {
+      _id: ObjectId.createFromHexString(bookingId),
+      userId: userId,
+    },
+    { $set: { startDate: startDate, endDate: endDate, totalCost: totalCost } }
+  );
+
+  if (result.modifiedCount > 0) {
+    res.status(200).send({ message: 'Booking dates updated successfully!' });
   } else {
     res.status(404).send({ message: 'Booking not found!' });
   }
