@@ -128,6 +128,30 @@ app.get('/cars', async (req, res) => {
   res.send(cars);
 });
 
+// Get recently added cars:
+app.get('/recent', async (req, res) => {
+  await client.connect();
+
+  const cars = await carCollectiion
+    .find(
+      {},
+      {
+        projection: {
+          model: 1,
+          availability: 1,
+          imageUrl: 1,
+          dailyRentalPrice: 1,
+          bookingCount: 1,
+          dateAdded: 1,
+        },
+      }
+    )
+    .sort({ dateAdded: -1 })
+    .limit(8)
+    .toArray();
+  res.send(cars);
+});
+
 // Get cars of logged in user
 app.get('/my-cars', verifyToken, async (req, res) => {
   try {
