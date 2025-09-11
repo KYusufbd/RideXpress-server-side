@@ -147,7 +147,7 @@ app.get('/recent', async (req, res) => {
       }
     )
     .sort({ dateAdded: -1 })
-    .limit(8)
+    .limit(6)
     .toArray();
   res.send(cars);
 });
