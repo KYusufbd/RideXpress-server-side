@@ -42,13 +42,16 @@ app.use(cookieParser());
 // Middleware: verifyToken
 const verifyToken = (req, res, next) => {
   const jwToken = req?.cookies?.token;
+  console.log('Verifying token!');
   if (!jwToken) {
     res.status(401).send({ message: 'Unauthorized access!' });
+    console.log('Token not found!');
     return;
   }
   jwt.verify(jwToken, secretKey, (err, decoded) => {
     if (err) {
       res.status(401).send({ message: 'Unauthorized access!' });
+      console.log('Token verification failed!');
       return;
     } else {
       req.user = decoded;
@@ -383,7 +386,7 @@ app.post('/users', async (req, res) => {
         const existingUser = await userCollectiion.findOne({
           email: user.email,
         });
-        const jwToken = jwt.sign(user, secretKey);
+        const jwToken = await jwt.sign(user, secretKey);
         if (!existingUser) {
           userCollectiion.insertOne(user);
           res.cookie('token', jwToken, { httpOnly: true, secure: true }).send('New user added!');
