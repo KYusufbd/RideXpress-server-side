@@ -389,9 +389,9 @@ app.post('/users', async (req, res) => {
         const jwToken = await jwt.sign(user, secretKey);
         if (!existingUser) {
           userCollectiion.insertOne(user);
-          res.cookie('token', jwToken, { httpOnly: true, secure: true }).send('New user added!');
+          res.cookie('token', jwToken, { httpOnly: true, secure: true, sameSite: 'none' }).send('New user added!');
         } else {
-          res.cookie('token', jwToken, { httpOnly: true, secure: true }).send('User logged in!');
+          res.cookie('token', jwToken, { httpOnly: true, secure: true, sameSite: 'none' }).send('User logged in!');
         }
       }
     });
