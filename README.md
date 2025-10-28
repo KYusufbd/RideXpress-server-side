@@ -116,9 +116,9 @@ RideXpress is a **car rental system** built with the MERN stack, designed to mak
 
 ## 🔗 Live Links
 
-- 🌍 **Live Website:** [https://ridexpressbd.netlify.app](#)
-- 💻 **Client Repo:** [https://github.com/KYusufbd/RideXpress-client-side](#)
-- ⚙️ **Server Repo:** [https://github.com/KYusufbd/RideXpress-server-side](#)
+- 🌍 **Live Website:** [https://ridexpressbd.netlify.app](https://ridexpressbd.netlify.app)
+- 💻 **Client Repo:** [https://github.com/KYusufbd/RideXpress-client-side](https://github.com/KYusufbd/RideXpress-client-side)
+- ⚙️ **Server Repo:** [https://github.com/KYusufbd/RideXpress-server-side](https://github.com/KYusufbd/RideXpress-server-side)
 
 ---
 
